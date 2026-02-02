@@ -33,7 +33,7 @@ The service architecture follows a clear flow:
 
 The project is designed to demonstrate how real Go exporters are built and evolved, focusing on clean architecture, reliability, and operational visibility — the core concerns of production monitoring infrastructure.
 
-**Current Stage:** Stage 1 - Init Project
+**Current Stage:** Stage 2 - Core Metrics Collection
 
 ---
 
@@ -59,6 +59,7 @@ All detailed documentation is moved to `docs/` folder:
 - [Architectural and design decisions](docs/DECISIONS.md)
 - [Configuration & Environment Variables](docs/CONFIGURATION.md)
 - [Running Locally](docs/RUNNING.md)
+- [Testing Guide](docs/TESTING.md)
 
 ---
 

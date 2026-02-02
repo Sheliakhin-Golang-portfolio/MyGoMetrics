@@ -72,12 +72,15 @@ The server will complete in-flight requests and shut down cleanly.
 
 ## Current Stage Limitations
 
-**Stage 1** provides:
+**Stage 2** provides:
 * HTTP server with `/healthcheck` endpoint
 * Basic configuration via flags and environment variables
 * Graceful shutdown handling
+* Core metrics collection (CPU, memory, disk, runtime) via collector package
 
 **Not yet available:**
-* `/metrics` endpoint (Prometheus metrics)
-* System metrics collection
+* `/metrics` endpoint (Prometheus metrics exposition)
+* HTTP exposure of collected metrics
 * Docker/containerization support
+
+**Note:** Metrics are collected in-memory via the collector package but are not yet exposed via HTTP endpoints. The `/metrics` endpoint will be added in a future stage.

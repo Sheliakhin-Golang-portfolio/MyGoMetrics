@@ -7,6 +7,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - Stage 2: Core Metrics Collection
+
+### Added
+
+#### Collector Package
+
+- `**internal/collector/collector.go**`: Core collector interface and types
+  - `Snapshot` struct: Prometheus-agnostic metric representation with name, value, and optional labels
+  - `Collector` interface: `Name() string` and `Collect(ctx context.Context) ([]Snapshot, error)`
+  - Full GoDoc documentation for exported types and interface
+  - Labels may be nil to indicate no labels (documented behavior)
+
+#### CPU Collector
+
+- `**internal/collector/cpu.go**`: CPU usage metrics collection
+  - `CPUCollector` struct implementing `Collector` interface
+  - `NewCPUCollector()` constructor function
+  - Uses `gopsutil/v3/cpu.PercentWithContext` with 1-second interval
+  - Metric: `cpu_usage_percent` (0-100 percentage)
+  - Context-aware collection with proper error handling
+
+#### Memory Collector
+
+- `**internal/collector/memory.go**`: Memory metrics collection
+  - `MemoryCollector` struct implementing `Collector` interface
+  - `NewMemoryCollector()` constructor function
+  - Uses `gopsutil/v3/mem.VirtualMemoryWithContext`
+  - Metrics: `memory_used_bytes`, `memory_total_bytes`
+  - Context-aware collection with proper error handling
+
+#### Disk Collector
+
+- `**internal/collector/disk.go**`: Disk I/O metrics collection
+  - `DiskCollector` struct implementing `Collector` interface
+  - `NewDiskCollector()` constructor function
+  - Uses `gopsutil/v3/disk.IOCountersWithContext`
+  - Aggregates I/O counters across all devices
+  - Metrics: `disk_read_bytes`, `disk_write_bytes`
+  - Handles platform-specific limitations gracefully
+
+#### Runtime Collector
+
+- `**internal/collector/runtime.go**`: Go runtime metrics collection
+  - `RuntimeCollector` struct implementing `Collector` interface
+  - `NewRuntimeCollector()` constructor function
+  - Uses standard library `runtime` package (no external dependencies)
+  - Uses `runtime.ReadMemStats` for compatibility (runtime/metrics noted for future)
+  - Metrics: `runtime_goroutines`, `runtime_gc_cycles`, `runtime_heap_alloc_bytes`
+  - Context-aware collection
+
+#### Testing
+
+- `**internal/collector/*_test.go**`: Comprehensive unit tests for all collectors
+  - Table-driven test patterns following Go best practices
+  - Tests for `Name()` method on all collectors
+  - Tests for `Collect()` method with valid contexts
+  - Tests for context cancellation behavior
+  - Test coverage: 90.2% of statements
+  - `test_helpers.go`: Shared test helper functions
+
+#### Dependencies
+
+- Added `github.com/shirou/gopsutil/v3` dependency for system metrics
+  - Used for CPU, memory, and disk metrics collection
+  - Industry-standard library used by real exporters
+
+### Technical Details
+
+- All collectors follow the Prometheus-agnostic design (no Prometheus client types)
+- Error handling strategy: collectors return partial results with errors rather than failing completely
+- Context support: all collectors respect context cancellation and timeouts
+- Metrics are collected in-memory but not yet exposed via HTTP endpoints
+- Collectors are testable independently without requiring a running server
+- Full GoDoc documentation for all exported types and functions
+
+### Notes
+
+- Metrics collection is functional but not yet exposed via `/metrics` endpoint (Stage 3)
+- No Prometheus client integration in this stage (per design decisions)
+- Disk I/O metrics may not be available on all platforms (handled gracefully)
+- Runtime collector uses `runtime.ReadMemStats`; `runtime/metrics` noted for future consideration
+
+---
+
 ## [0.1.0] - Stage 1: Project initialization
 
 ### Added
