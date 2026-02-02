@@ -45,6 +45,39 @@ export LISTEN_ADDR=:8080
 
 ---
 
+## Metrics Collection Configuration
+
+| Variable | Description | Default | Flag |
+|----------|-------------|---------|------|
+| `COLLECT_INTERVAL` | Interval between collector runs | `15s` | `-collect-interval` |
+| `HOST` | Hostname label value for Prometheus metrics | `os.Hostname()` or `"unknown"` | `-host` |
+| `ENV` | Environment label value for Prometheus metrics | `""` (empty) | `-env` |
+
+Used by:
+- Prometheus exporter (periodic metrics collection)
+
+**Interval Format:**
+- Duration strings: `15s`, `30s`, `1m`, `2m30s`
+- Must be a positive duration
+
+**Examples:**
+
+```bash
+# Using command-line flags
+go run . -collect-interval 30s -host myserver -env production
+
+# Using environment variables
+export COLLECT_INTERVAL=30s
+export HOST=myserver
+export ENV=production
+go run .
+
+# Using .env file
+# See .env.example for format
+```
+
+---
+
 ## Environment File
 
 An optional `.env` file can be used to set environment variables. See `.env.example` for the format.
@@ -57,4 +90,6 @@ An optional `.env` file can be used to set environment variables. See `.env.exam
 
 * The listen address cannot be empty
 * Invalid addresses will cause the server to fail at startup
+* Collect interval must be a positive duration
+* Invalid collect interval format will cause the server to fail at startup
 * All configuration is validated at startup before the server begins listening

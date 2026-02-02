@@ -7,6 +7,125 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - Stage 3: Prometheus Exporter
+
+### Added
+
+#### Exporter Package
+
+- `**internal/exporter/prometheus.go**`: Prometheus metric definitions and mapping
+  - Metric type definitions (Gauge vs Counter)
+  - Mapping from collector snapshot names to Prometheus metrics
+  - Support for Gauge metrics (CPU usage, memory, runtime goroutines/heap)
+  - Support for Counter metrics (disk I/O, GC cycles) with delta tracking
+  - Label support (`host`, `env`) on all metrics
+  - Full GoDoc documentation
+
+- `**internal/exporter/registry.go**`: Prometheus registry bridge
+  - `Registry` struct bridging collectors to Prometheus metrics
+  - `NewRegistry()` constructor with collectors and label values
+  - `Update(ctx)` method for periodic metric collection and updates
+  - `Handler()` method returning HTTP handler for `/metrics` endpoint
+  - Per-collector error handling (log and continue strategy)
+  - Counter delta computation for cumulative metrics
+  - Full GoDoc documentation
+
+#### Configuration Enhancements
+
+- `**internal/config/config.go**`: Extended configuration
+  - `CollectInterval` field: configurable interval between collector runs (default: 15s)
+  - `HostName` field: hostname label value for Prometheus metrics (default: `os.Hostname()`)
+  - `Env` field: environment label value for Prometheus metrics (default: empty string)
+  - Flags: `-collect-interval`, `-host`, `-env`
+  - Environment variables: `COLLECT_INTERVAL`, `HOST`, `ENV`
+  - Duration parsing and validation for collect interval
+  - Updated GoDoc with new flags and environment variables
+
+#### HTTP Server Integration
+
+- `**internal/server/http.go**`: Metrics endpoint support
+  - `Start()` function now accepts optional `metricsHandler http.Handler` parameter
+  - `/metrics` endpoint registration when handler is provided
+  - Backward compatible: handler can be `nil` (no `/metrics` endpoint)
+  - Updated GoDoc to reflect metrics endpoint support
+
+#### Main Application Wiring
+
+- `**cmd/main.go**`: Complete exporter integration
+  - Collector instantiation (CPU, Memory, Disk, Runtime)
+  - Exporter registry creation with host/env labels
+  - Periodic collection goroutine running at `CollectInterval`
+  - Initial collection on startup
+  - Metrics handler passed to HTTP server
+  - Startup logging for collection interval
+
+#### Prometheus Metrics
+
+All metrics exposed with `mygometrics_` prefix and `host`/`env` labels:
+
+- `mygometrics_cpu_usage_percent` (Gauge): CPU usage percentage (0-100)
+- `mygometrics_memory_used_bytes` (Gauge): Memory used in bytes
+- `mygometrics_memory_total_bytes` (Gauge): Total memory available in bytes
+- `mygometrics_disk_read_bytes` (Counter): Total bytes read from disk (cumulative)
+- `mygometrics_disk_write_bytes` (Counter): Total bytes written to disk (cumulative)
+- `mygometrics_runtime_goroutines` (Gauge): Current number of goroutines
+- `mygometrics_runtime_gc_cycles` (Counter): Total GC cycles since program start (cumulative)
+- `mygometrics_runtime_heap_alloc_bytes` (Gauge): Bytes allocated on the heap
+
+#### Dependencies
+
+- Added `github.com/prometheus/client_golang` dependency
+  - Used for Prometheus metric types (Gauge, Counter)
+  - Used for Prometheus registry and HTTP handler
+  - Official Prometheus Go client library
+
+#### Documentation
+
+- `**.env.example**`: Updated with new configuration variables
+  - `COLLECT_INTERVAL`: Interval between collector runs
+  - `HOST`: Hostname label value
+  - `ENV`: Environment label value
+  - Inline comments explaining defaults and usage
+
+- `**docs/CONFIGURATION.md**`: Metrics collection configuration section
+  - New configuration table for metrics collection settings
+  - Examples for interval, host, and env configuration
+  - Validation rules for collect interval
+
+- `**docs/RUNNING.md**`: Metrics endpoint documentation
+  - `/metrics` endpoint usage and examples
+  - Prometheus scrape configuration example
+  - List of exposed metrics
+  - Updated stage features section
+
+- `**docs/DECISIONS.md**`: Architecture Decision Records updated for Stage 3
+  - Decision 2: Collector-Based Architecture (independent collectors for separation of concerns)
+  - Decision 3: Prometheus-Agnostic Collectors (decoupled data collection from exposition)
+  - Decision 4: Metrics Source Selection (Go stdlib and gopsutil rationale)
+  - Decision 5: Error Handling Strategy (partial metric loss vs fatal errors)
+  - Decision 8: Concurrency Model (periodic collection with configurable interval)
+  - Updated existing decisions to reflect Stage 3 implementation (HTTP endpoints, graceful shutdown)
+  - Document now covers complete project evolution from Stage 1 through Stage 3
+
+### Technical Details
+
+- Periodic collection model: metrics collected at configurable intervals (default: 15s)
+- Counter delta tracking: cumulative counters (disk I/O, GC cycles) track previous values and add deltas
+- Error handling: per-collector failures are logged; partial metrics are still served
+- Prometheus-agnostic collectors: collectors remain unchanged; no Prometheus imports in `internal/collector`
+- Label support: all metrics include `host` and `env` labels for multi-instance deployments
+- Graceful shutdown: periodic collection goroutine respects context cancellation
+
+### Notes
+
+- Metrics are now exposed via HTTP `/metrics` endpoint for Prometheus scraping
+- Collection happens periodically in background; `/metrics` serves current registry state
+- Counter metrics handle resets gracefully (negative deltas are ignored)
+- Hostname is automatically detected; can be overridden via config
+- Environment label is optional (empty string if not set)
+
+---
+
 ## [0.2.0] - Stage 2: Core Metrics Collection
 
 ### Added

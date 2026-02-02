@@ -61,6 +61,36 @@ curl http://localhost:9000/healthcheck
 
 Expected response: `{"status":"ok"}` with HTTP 200 status.
 
+## Metrics Endpoint
+
+The `/metrics` endpoint exposes Prometheus-formatted metrics for scraping:
+
+```bash
+curl http://localhost:9000/metrics
+```
+
+This endpoint returns all collected metrics in Prometheus text format, including:
+
+* **CPU metrics**: `mygometrics_cpu_usage_percent`
+* **Memory metrics**: `mygometrics_memory_used_bytes`, `mygometrics_memory_total_bytes`
+* **Disk metrics**: `mygometrics_disk_read_bytes`, `mygometrics_disk_write_bytes`
+* **Runtime metrics**: `mygometrics_runtime_goroutines`, `mygometrics_runtime_gc_cycles`, `mygometrics_runtime_heap_alloc_bytes`
+
+All metrics include `host` and `env` labels as configured.
+
+**Prometheus Configuration:**
+
+To scrape metrics from MyGoMetrics, add a scrape config to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'mygometrics'
+    static_configs:
+      - targets: ['localhost:9000']
+```
+
+Metrics are collected periodically (default: every 15 seconds) and updated in the Prometheus registry. The `/metrics` endpoint serves the current state of all metrics.
+
 ## Graceful Shutdown
 
 The server handles `SIGINT` (Ctrl+C) and `SIGTERM` signals gracefully:
@@ -70,17 +100,17 @@ The server handles `SIGINT` (Ctrl+C) and `SIGTERM` signals gracefully:
 
 The server will complete in-flight requests and shut down cleanly.
 
-## Current Stage Limitations
+## Current Stage Features
 
-**Stage 2** provides:
+**Stage 3** provides:
 * HTTP server with `/healthcheck` endpoint
+* `/metrics` endpoint for Prometheus scraping
 * Basic configuration via flags and environment variables
+* Metrics collection configuration (interval, host, env labels)
 * Graceful shutdown handling
 * Core metrics collection (CPU, memory, disk, runtime) via collector package
+* Prometheus exporter with periodic collection and metric exposition
 
 **Not yet available:**
-* `/metrics` endpoint (Prometheus metrics exposition)
-* HTTP exposure of collected metrics
 * Docker/containerization support
-
-**Note:** Metrics are collected in-memory via the collector package but are not yet exposed via HTTP endpoints. The `/metrics` endpoint will be added in a future stage.
+* Helm charts for Kubernetes deployment

@@ -6,8 +6,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/collector"
 	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/config"
+	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/exporter"
 	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/server"
 )
 
@@ -33,9 +36,42 @@ func main() {
 		cancel()
 	}()
 
-	// Start HTTP server
+	// Instantiate collectors
+	collectors := []collector.Collector{
+		collector.NewCPUCollector(),
+		collector.NewMemoryCollector(),
+		collector.NewDiskCollector(),
+		collector.NewRuntimeCollector(),
+	}
+
+	// Create exporter registry
+	registry, err := exporter.NewRegistry(collectors, cfg.HostName, cfg.Env)
+	if err != nil {
+		log.Fatalf("Failed to create exporter registry: %v", err)
+	}
+
+	// Start periodic collection goroutine
+	go func() {
+		ticker := time.NewTicker(cfg.CollectInterval)
+		defer ticker.Stop()
+
+		// Initial collection
+		registry.Update(ctx)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				registry.Update(ctx)
+			}
+		}
+	}()
+
+	// Start HTTP server with metrics handler
 	log.Printf("Starting HTTP server on %s", cfg.ListenAddr)
-	if err := server.Start(ctx, cfg); err != nil {
+	log.Printf("Metrics collection interval: %v", cfg.CollectInterval)
+	if err := server.Start(ctx, cfg, registry.Handler()); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
 

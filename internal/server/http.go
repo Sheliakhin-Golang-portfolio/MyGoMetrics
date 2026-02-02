@@ -11,11 +11,12 @@ import (
 
 // Start starts the HTTP server with the given configuration.
 // The server listens on cfg.ListenAddr and exposes a /healthcheck endpoint.
+// If metricsHandler is not nil, it also exposes a /metrics endpoint for Prometheus scraping.
 // The function blocks until the context is cancelled, at which point it performs
 // a graceful shutdown.
 //
 // Returns an error if the server fails to start or if shutdown fails.
-func Start(ctx context.Context, cfg config.Config) error {
+func Start(ctx context.Context, cfg config.Config, metricsHandler http.Handler) error {
 	// Create HTTP server
 	srv := &http.Server{
 		Addr:         cfg.ListenAddr,
@@ -27,6 +28,9 @@ func Start(ctx context.Context, cfg config.Config) error {
 	// Register routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthcheck", healthcheckHandler)
+	if metricsHandler != nil {
+		mux.Handle("/metrics", metricsHandler)
+	}
 	srv.Handler = mux
 
 	// Start server in a goroutine

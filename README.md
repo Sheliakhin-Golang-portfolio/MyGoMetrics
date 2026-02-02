@@ -33,7 +33,7 @@ The service architecture follows a clear flow:
 
 The project is designed to demonstrate how real Go exporters are built and evolved, focusing on clean architecture, reliability, and operational visibility — the core concerns of production monitoring infrastructure.
 
-**Current Stage:** Stage 2 - Core Metrics Collection
+**Current Stage:** Stage 3 - Prometheus Exporter
 
 ---
 
