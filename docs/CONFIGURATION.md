@@ -52,6 +52,8 @@ export LISTEN_ADDR=:8080
 | `COLLECT_INTERVAL` | Interval between collector runs | `15s` | `-collect-interval` |
 | `HOST` | Hostname label value for Prometheus metrics | `os.Hostname()` or `"unknown"` | `-host` |
 | `ENV` | Environment label value for Prometheus metrics | `""` (empty) | `-env` |
+| `ENABLED_COLLECTORS` | Comma-separated list of collector names to enable | `""` (empty = all enabled) | `-enabled-collectors` |
+| `LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` | `-log-level` |
 
 Used by:
 - Prometheus exporter (periodic metrics collection)
@@ -60,16 +62,27 @@ Used by:
 - Duration strings: `15s`, `30s`, `1m`, `2m30s`
 - Must be a positive duration
 
+**Collector Names:**
+- Valid collector names: `cpu`, `memory`, `disk`, `runtime`
+- If `ENABLED_COLLECTORS` is empty or not set, all collectors are enabled
+- Unknown collector names are ignored (no-op)
+- Collector names are case-sensitive
+
 **Examples:**
 
 ```bash
 # Using command-line flags
 go run . -collect-interval 30s -host myserver -env production
 
+# Enable only CPU and memory collectors
+go run . -enabled-collectors cpu,memory
+
 # Using environment variables
 export COLLECT_INTERVAL=30s
 export HOST=myserver
 export ENV=production
+export ENABLED_COLLECTORS=cpu,memory,disk
+export LOG_LEVEL=info
 go run .
 
 # Using .env file

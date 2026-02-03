@@ -2,12 +2,12 @@ package exporter
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 // Registry bridges collector snapshots to Prometheus metrics.
@@ -17,12 +17,13 @@ type Registry struct {
 	reg        *prometheus.Registry
 	metrics    *metricHolders
 	labels     map[string]string
+	logger     *zap.Logger
 }
 
-// NewRegistry creates a Registry with the given collectors and label values.
+// NewRegistry creates a Registry with the given collectors, label values, and logger.
 // Labels must include "host" and "env" (use empty string if not set).
 // The Prometheus registry and all metrics are created and registered.
-func NewRegistry(collectors []collector.Collector, host, env string) (*Registry, error) {
+func NewRegistry(collectors []collector.Collector, host, env string, logger *zap.Logger) (*Registry, error) {
 	labels := map[string]string{
 		"host": host,
 		"env":  env,
@@ -39,6 +40,7 @@ func NewRegistry(collectors []collector.Collector, host, env string) (*Registry,
 		reg:        reg,
 		metrics:    metrics,
 		labels:     labels,
+		logger:     logger,
 	}, nil
 }
 
@@ -51,7 +53,7 @@ func (r *Registry) Update(ctx context.Context) {
 	for _, c := range r.collectors {
 		snapshots, err := c.Collect(ctx)
 		if err != nil {
-			log.Printf("collector %s failed: %v", c.Name(), err)
+			r.logger.Warn("collector failed", zap.String("collector", c.Name()), zap.Error(err))
 			// Continue with other collectors per error handling strategy
 			continue
 		}

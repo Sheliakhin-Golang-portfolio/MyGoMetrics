@@ -7,6 +7,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - Stage 4: Control & Testing
+
+### Added
+
+#### Collector Control
+
+- `**internal/config/config.go**`: Collector enable/disable configuration
+  - `EnabledCollectors` field: slice of collector names to enable (default: empty = all enabled)
+  - Flag: `-enabled-collectors` for comma-separated list of collector names
+  - Environment variable: `ENABLED_COLLECTORS` for comma-separated list of collector names
+  - Valid collector names: `cpu`, `memory`, `disk`, `runtime`
+  - `parseCollectors()` helper function for parsing comma-separated collector lists with whitespace trimming
+  - Updated GoDoc with collector configuration details
+
+- `**cmd/main.go**`: Collector filtering logic
+  - `filterCollectors()` function for filtering collectors based on enabled list
+  - O(1) lookup using map for performance
+  - Unknown collector names are ignored (no-op, no error)
+  - Logging of enabled collectors at startup
+  - If `EnabledCollectors` is empty, all collectors are enabled
+
+#### Structured Logging
+
+- `**internal/logger/logger.go**`: Structured logging with uber-go/zap
+  - Global `Logger` variable for application-wide logging
+  - `Init(level string)` function to initialize logger with specified level
+  - `Sync()` function to flush buffered logs
+  - Supports log levels: `debug`, `info`, `warn`, `error`
+  - Production-ready JSON output format
+  - Full GoDoc documentation
+
+- `**internal/config/config.go**`: Log level configuration
+  - `LogLevel` field: configurable logging level (default: `info`)
+  - Flag: `-log-level` for setting log level
+  - Environment variable: `LOG_LEVEL` for setting log level
+  - Valid values: `debug`, `info`, `warn`, `error`
+
+- `**cmd/main.go**`: Integrated structured logging
+  - Logger initialization on startup with configured log level
+  - Logger sync (flush) on application shutdown
+  - Replaced standard library `log` with zap logger throughout application
+  - Structured logging for startup, shutdown, signal handling, and error conditions
+  - Fallback to standard library `log` for pre-initialization errors
+
+- `**internal/exporter/registry.go**`: Logger integration in exporter
+  - `NewRegistry()` now accepts `logger *zap.Logger` parameter
+  - Structured logging for collector errors during metric updates
+  - Error logs include collector name and error details as structured fields
+
+#### Comprehensive Testing
+
+- `**internal/exporter/prometheus_test.go**`: Exporter package tests
+  - Table-driven tests with multiple scenarios
+  - Mock collector implementation (`mockCollector`) for testing
+  - Test cases:
+    - All collectors succeed: verifies all metrics are exposed
+    - All collectors fail: verifies HTTP handler still returns 200 (availability over completeness)
+    - One failing collector: verifies partial results are exposed (resilience)
+  - HTTP handler integration tests via `httptest`
+  - No-op logger (`zap.NewNop()`) to avoid test output pollution
+  - Tests verify error handling strategy (partial metric loss vs fatal errors)
+  - Full test coverage of exporter resilience behavior
+
+- `**docs/TESTING.md**`: Testing documentation
+  - Quick start guide for running tests
+  - Test coverage generation instructions
+  - HTML coverage report generation
+  - Test structure overview for collector and exporter packages
+  - Testing strategy documentation (mock collectors only, no OS-level mocking)
+  - Continuous integration pre-commit checks
+  - Race detection instructions
+
+#### Configuration Enhancements
+
+- `**.env.example**`: Updated with new configuration variables
+  - `ENABLED_COLLECTORS`: Comma-separated list of collector names to enable
+  - `LOG_LEVEL`: Logging level configuration
+  - Inline comments explaining valid values and defaults
+  - Updated with Stage 4 configuration options
+
+#### Dependencies
+
+- Added `go.uber.org/zap` dependency
+  - Industry-standard structured logging library for Go
+  - Used for production-grade logging throughout the application
+  - Provides JSON-formatted logs with structured fields
+  - Zero-allocation logging performance
+
+### Technical Details
+
+- Collector filtering happens at startup; disabled collectors are not instantiated or run
+- Empty or nil `EnabledCollectors` enables all collectors (default behavior)
+- Unknown collector names in configuration are silently ignored (no-op)
+- Structured logging uses JSON format for machine-readable logs
+- Logger is initialized early in application startup
+- Logger is synchronized (flushed) on graceful shutdown
+- Test coverage focuses on behavior and integration boundaries, not internal details
+- Exporter tests verify resilience: partial failures do not break `/metrics` endpoint
+- Mock collectors are used exclusively in tests; no OS-level mocking
+
+### Notes
+
+- Collector enable/disable is useful for reducing resource usage or troubleshooting
+- Structured logging improves observability in production environments
+- Test coverage demonstrates production-grade error handling strategy
+- One failing collector does not break the entire `/metrics` endpoint (availability over completeness)
+- Tests verify that successful collectors' metrics are still exposed when others fail
+
+---
+
 ## [0.3.0] - Stage 3: Prometheus Exporter
 
 ### Added

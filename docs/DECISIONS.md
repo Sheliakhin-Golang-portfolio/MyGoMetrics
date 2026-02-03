@@ -237,6 +237,28 @@ The goal is not to present a "perfect" exporter, but to **make trade-offs explic
 
 ---
 
+## 11. Testing Strategy
+
+**Decision:** Test behavior and integration boundaries, not internal details.
+
+**Approach:**
+
+* Unit tests for collectors
+* HTTP endpoint tests for `/metrics`
+* Avoid excessive mocking of OS-level behavior
+
+**Non-Goals:**
+
+* Exhaustive platform simulation
+* Kernel-level fault injection
+
+**Implications:**
+
+* Tests are stable and fast
+* Some platform-specific behavior is validated manually
+
+---
+
 ## Final Note
 
 These decisions reflect **intentional trade-offs**, not missing knowledge.

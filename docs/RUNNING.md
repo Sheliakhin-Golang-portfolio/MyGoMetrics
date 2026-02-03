@@ -27,29 +27,41 @@ Run the binary with default settings (listens on `:9000`):
 ./cmd
 ```
 
-### Configuration Options
+### Configuration
 
-You can configure the listen address using:
+The application can be configured using command-line flags, environment variables, or a `.env` file.
 
-1. **Command-line flags** (highest precedence):
-   ```bash
-   ./cmd -listen-addr :8080
-   ```
+**Quick Examples:**
 
-2. **Environment variables**:
-   ```bash
-   export LISTEN_ADDR=:8080
-   ./cmd
-   ```
+```bash
+# Using command-line flags (highest precedence)
+./cmd -listen-addr :8080 -collect-interval 30s -env production
 
-3. **`.env` file** (optional):
-   ```bash
-   # Copy .env.example to .env and modify as needed
-   cp .env.example .env
-   ./cmd
-   ```
+# Using environment variables
+export LISTEN_ADDR=:8080
+export COLLECT_INTERVAL=30s
+export ENABLED_COLLECTORS=cpu,memory
+./cmd
 
-See [CONFIGURATION.md](./CONFIGURATION.md) for details on configuration precedence.
+# Using .env file (copy .env.example to .env and modify)
+cp .env.example .env
+./cmd
+```
+
+**Common Configuration Examples:**
+
+```bash
+# Enable only specific collectors
+./cmd -enabled-collectors cpu,memory
+
+# Change log level for debugging
+./cmd -log-level debug
+
+# Production configuration
+./cmd -listen-addr :9000 -env production -log-level info
+```
+
+For a complete list of all configuration options, flags, environment variables, defaults, and configuration precedence rules, see [CONFIGURATION.md](./CONFIGURATION.md).
 
 ## Health Check
 
@@ -102,14 +114,18 @@ The server will complete in-flight requests and shut down cleanly.
 
 ## Current Stage Features
 
-**Stage 3** provides:
+**Stage 4 (v0.4.0)** provides:
 * HTTP server with `/healthcheck` endpoint
 * `/metrics` endpoint for Prometheus scraping
-* Basic configuration via flags and environment variables
+* Full configuration via flags, environment variables, and `.env` files
 * Metrics collection configuration (interval, host, env labels)
+* **Collector enable/disable by name** - selectively enable collectors
+* **Structured logging with uber-go/zap** - JSON logs with configurable levels
 * Graceful shutdown handling
 * Core metrics collection (CPU, memory, disk, runtime) via collector package
 * Prometheus exporter with periodic collection and metric exposition
+* **Production-grade error handling** - one failing collector does not break `/metrics`
+* **Comprehensive test coverage** - including exporter tests with mocked collectors
 
 **Not yet available:**
 * Docker/containerization support

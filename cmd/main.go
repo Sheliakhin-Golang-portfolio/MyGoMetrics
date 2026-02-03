@@ -11,15 +11,24 @@ import (
 	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/collector"
 	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/config"
 	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/exporter"
+	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/logger"
 	"github.com/Sheliakhin-Golang-portfolio/MyGoMetrics/internal/server"
+	"go.uber.org/zap"
 )
 
 func main() {
 	// Load configuration (parses flags and env vars)
 	cfg, err := config.Load()
 	if err != nil {
+		// Using standard library log instead of zap before zap is initialized
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
+
+	// Initialize logger
+	if err := logger.Init(cfg.LogLevel); err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer logger.Sync()
 
 	// Create root context with cancellation
 	ctx, cancel := context.WithCancel(context.Background())
@@ -32,22 +41,36 @@ func main() {
 	// Handle signals in a goroutine
 	go func() {
 		sig := <-sigCh
-		log.Printf("Received signal: %v, initiating graceful shutdown...", sig)
+		logger.Logger.Info("Received signal, initiating graceful shutdown", zap.Any("signal", sig))
 		cancel()
 	}()
 
-	// Instantiate collectors
-	collectors := []collector.Collector{
+	// Instantiate all collectors
+	allCollectors := []collector.Collector{
 		collector.NewCPUCollector(),
 		collector.NewMemoryCollector(),
 		collector.NewDiskCollector(),
 		collector.NewRuntimeCollector(),
 	}
 
+	// Filter collectors by EnabledCollectors if specified
+	collectors := filterCollectors(allCollectors, cfg.EnabledCollectors)
+
+	// Log enabled collectors
+	if len(cfg.EnabledCollectors) > 0 {
+		collectorNames := make([]string, len(collectors))
+		for i, c := range collectors {
+			collectorNames[i] = c.Name()
+		}
+		logger.Logger.Info("Enabled collectors", zap.Strings("collectors", collectorNames))
+	} else {
+		logger.Logger.Info("All collectors enabled")
+	}
+
 	// Create exporter registry
-	registry, err := exporter.NewRegistry(collectors, cfg.HostName, cfg.Env)
+	registry, err := exporter.NewRegistry(collectors, cfg.HostName, cfg.Env, logger.Logger)
 	if err != nil {
-		log.Fatalf("Failed to create exporter registry: %v", err)
+		logger.Logger.Fatal("Failed to create exporter registry", zap.Error(err))
 	}
 
 	// Start periodic collection goroutine
@@ -69,11 +92,36 @@ func main() {
 	}()
 
 	// Start HTTP server with metrics handler
-	log.Printf("Starting HTTP server on %s", cfg.ListenAddr)
-	log.Printf("Metrics collection interval: %v", cfg.CollectInterval)
+	logger.Logger.Info("Starting HTTP server", zap.String("listen_addr", cfg.ListenAddr))
+	logger.Logger.Info("Metrics collection interval", zap.Duration("collect_interval", cfg.CollectInterval))
 	if err := server.Start(ctx, cfg, registry.Handler()); err != nil {
-		log.Fatalf("Server error: %v", err)
+		logger.Logger.Fatal("Server error", zap.Error(err))
 	}
 
-	log.Println("Server shutdown complete")
+	logger.Logger.Info("Server shutdown complete")
+}
+
+// filterCollectors filters collectors based on the enabled list.
+// If enabled is nil or empty, returns all collectors.
+// Unknown collector names are ignored (no-op).
+func filterCollectors(all []collector.Collector, enabled []string) []collector.Collector {
+	if len(enabled) == 0 {
+		return all
+	}
+
+	// Build a map for O(1) lookup
+	enabledMap := make(map[string]struct{}, len(enabled))
+	for _, name := range enabled {
+		enabledMap[name] = struct{}{}
+	}
+
+	// Filter collectors
+	filtered := make([]collector.Collector, 0, len(all))
+	for _, c := range all {
+		if _, ok := enabledMap[c.Name()]; ok {
+			filtered = append(filtered, c)
+		}
+	}
+
+	return filtered
 }
