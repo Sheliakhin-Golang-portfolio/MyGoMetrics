@@ -259,6 +259,23 @@ The goal is not to present a "perfect" exporter, but to **make trade-offs explic
 
 ---
 
+## 12. Containerization Choices
+
+**Decision:** Use a minimal, non-root container image.
+
+**Rationale:**
+
+* Exporters are frequently deployed cluster-wide
+* Smaller images reduce attack surface and startup time
+* Non-root execution aligns with best practices
+
+**Implementation Notes:**
+
+* Multi-stage build
+* Distroless or scratch-based runtime image
+
+---
+
 ## Final Note
 
 These decisions reflect **intentional trade-offs**, not missing knowledge.

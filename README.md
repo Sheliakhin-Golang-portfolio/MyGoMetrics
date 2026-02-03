@@ -33,7 +33,7 @@ The service architecture follows a clear flow:
 
 The project is designed to demonstrate how real Go exporters are built and evolved, focusing on clean architecture, reliability, and operational visibility — the core concerns of production monitoring infrastructure.
 
-**Current Stage:** Stage 4 - Control & Testing
+**Current Stage:** Stage 5 - Docker & Containerization
 
 ---
 

@@ -99,6 +99,33 @@ An optional `.env` file can be used to set environment variables. See `.env.exam
 
 ---
 
+## Docker Configuration
+
+When running MyGoMetrics in a Docker container, all configuration options work identically:
+
+* **Command-line flags** can be passed as arguments to the container entrypoint
+* **Environment variables** can be set using `-e` or `--env` flags in `docker run`
+* **Configuration precedence** remains the same: flags > environment variables > defaults
+
+**Example:**
+
+```bash
+docker run --rm -p 9000:9000 \
+  -e LISTEN_ADDR=:9000 \
+  -e COLLECT_INTERVAL=30s \
+  -e ENABLED_COLLECTORS=cpu,memory \
+  mygometrics -log-level debug
+```
+
+In this example:
+- `LISTEN_ADDR`, `COLLECT_INTERVAL`, and `ENABLED_COLLECTORS` are set via environment variables
+- `-log-level debug` is set via command-line flag (highest precedence)
+- The flag overrides any `LOG_LEVEL` environment variable
+
+See [RUNNING.md](./RUNNING.md) for more Docker usage examples.
+
+---
+
 ## Validation
 
 * The listen address cannot be empty

@@ -114,6 +114,11 @@ The server will complete in-flight requests and shut down cleanly.
 
 ## Current Stage Features
 
+**Stage 5 (v0.5.0)** provides:
+* All Stage 4 features plus:
+* **Docker containerization support** - Multi-stage Dockerfile with distroless runtime
+* **Production-ready container image** - Non-root execution, minimal base image
+
 **Stage 4 (v0.4.0)** provides:
 * HTTP server with `/healthcheck` endpoint
 * `/metrics` endpoint for Prometheus scraping
@@ -128,5 +133,75 @@ The server will complete in-flight requests and shut down cleanly.
 * **Comprehensive test coverage** - including exporter tests with mocked collectors
 
 **Not yet available:**
-* Docker/containerization support
 * Helm charts for Kubernetes deployment
+
+---
+
+## Running with Docker
+
+### Building the Docker Image
+
+Build the Docker image from the `MyGoMetrics` directory:
+
+```bash
+docker build -t mygometrics .
+```
+
+This creates a multi-stage build that:
+- Compiles a static Go binary in the build stage
+- Copies only the binary to a minimal distroless runtime image
+- Results in a small, secure container image
+
+### Running the Container
+
+Run the container with default settings (listens on port 9000):
+
+```bash
+docker run --rm -p 9000:9000 mygometrics
+```
+
+**Configuration Options:**
+
+All configuration options work the same way in containers:
+
+```bash
+# Using environment variables
+docker run --rm -p 9000:9000 \
+  -e LISTEN_ADDR=:9000 \
+  -e COLLECT_INTERVAL=30s \
+  -e ENV=production \
+  -e LOG_LEVEL=info \
+  mygometrics
+
+# Using command-line flags
+docker run --rm -p 9000:9000 \
+  mygometrics -listen-addr :9000 -env production -log-level info
+
+# Enable only specific collectors
+docker run --rm -p 9000:9000 \
+  -e ENABLED_COLLECTORS=cpu,memory \
+  mygometrics
+```
+
+**Port Mapping:**
+
+The container exposes port 9000 by default. Map it to a different host port if needed:
+
+```bash
+docker run --rm -p 8080:9000 mygometrics
+```
+
+**Security Notes:**
+
+- The container runs as a non-root user (`nonroot`) by default
+- The distroless base image contains no shell or unnecessary tools
+- The binary is statically compiled with CGO disabled for maximum portability
+
+**Verification:**
+
+Once running, verify the container is healthy:
+
+```bash
+curl http://localhost:9000/healthcheck
+curl http://localhost:9000/metrics
+```

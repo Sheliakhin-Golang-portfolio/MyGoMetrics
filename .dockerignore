@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Environment files
+.env
+.env.*
+
+# Test files
+*_test.go
+*.test
+
+# Build artifacts
+bin/
+tmp/
+*.exe
+cmd.exe
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Go specific
+vendor/

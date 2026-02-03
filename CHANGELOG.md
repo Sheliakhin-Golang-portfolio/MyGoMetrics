@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - Stage 5: Docker & Containerization
+
+### Added
+
+#### Docker Support
+
+- `**Dockerfile**`: Production-ready multi-stage Docker build
+  - Build stage: Uses `golang:1.25-alpine` for compilation
+  - Static binary build with `CGO_ENABLED=0`, `GOOS=linux`, `GOARCH=amd64`
+  - Binary optimization with `-ldflags="-w -s"` for smaller size
+  - Runtime stage: Uses `gcr.io/distroless/static-debian12:nonroot` minimal image
+  - Non-root user execution (distroless images use `nonroot` user by default)
+  - Exposes port 9000 (default metrics and health check port)
+  - Single binary entrypoint `/mygometrics`
+
+- `**.dockerignore**`: Build context optimization
+  - Excludes Git files, documentation, test files, IDE files, and build artifacts
+  - Reduces Docker build context size for faster builds
+  - Prevents accidental inclusion of sensitive files (`.env` files)
+
+#### Documentation Updates
+
+- `**docs/RUNNING.md**`: Added Docker usage section
+  - Docker build instructions
+  - Docker run examples with port mapping
+  - Configuration via environment variables in containers
+  - Notes on non-root execution and port exposure
+
+- `**docs/CONFIGURATION.md**`: Added Docker configuration note
+  - Clarifies that all existing flags and environment variables work in containers
+  - Configuration precedence remains the same (flags > env vars > defaults)
+
+### Technical Details
+
+- Docker image follows containerization best practices:
+  - Multi-stage build reduces final image size
+  - Static binary enables use of minimal runtime images
+  - Non-root execution improves security posture
+  - Distroless base image eliminates shell and unnecessary tools
+  - Build context optimization via `.dockerignore` improves build performance
+
+- Container configuration:
+  - Default listen address `:9000` works correctly in containers
+  - All configuration options (flags, env vars) remain functional
+  - Graceful shutdown handling works with container orchestration signals
+
+---
+
 ## [0.4.0] - Stage 4: Control & Testing
 
 ### Added
