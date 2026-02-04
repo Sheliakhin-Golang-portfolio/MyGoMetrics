@@ -1,0 +1,87 @@
+# Default values for mygometrics
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  # Image repository (without tag)
+  repository: mygometrics
+  # Image tag (override with specific version or 'latest')
+  tag: "v0.6.0"
+  # Image pull policy
+  pullPolicy: IfNotPresent
+
+# Application configuration (mapped to environment variables)
+config:
+  # HTTP server listen address (must listen on 0.0.0.0/: for in-cluster access)
+  listenAddr: ":9000"
+  # Interval between collector runs (e.g., "15s", "30s")
+  collectInterval: "15s"
+  # Hostname label value for Prometheus metrics (empty = use pod/node name)
+  host: ""
+  # Environment label value for Prometheus metrics (e.g., "production", "staging")
+  env: ""
+  # Comma-separated list of collector names to enable (empty = all enabled)
+  # Valid names: cpu, memory, disk, runtime
+  enabledCollectors: []
+  # Logging level: debug, info, warn, error
+  logLevel: "info"
+
+# Kubernetes Service configuration
+service:
+  # Service type (ClusterIP, NodePort, LoadBalancer)
+  type: ClusterIP
+  # Service port (container targetPort is always 9000)
+  port: 9000
+
+# Pod-level security context (applied to all containers in the pod)
+# Aligns with Kubernetes Pod Security Standards (restricted profile)
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container-level security context
+# Aligns with Kubernetes Pod Security Standards (restricted profile)
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  capabilities:
+    drop:
+      - ALL
+
+# Resource requests and limits (optional)
+resources:
+  # requests:
+  #   cpu: "50m"
+  #   memory: "64Mi"
+  # limits:
+  #   cpu: "500m"
+  #   memory: "256Mi"
+
+# ServiceAccount configuration
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# ServiceMonitor configuration (for Prometheus Operator)
+# Requires Prometheus Operator to be installed in the cluster
+serviceMonitor:
+  # Enable ServiceMonitor creation
+  enabled: false
+  # Scrape interval for Prometheus
+  interval: "30s"
+  # Namespace where ServiceMonitor should be created (empty = release namespace)
+  namespace: ""
+  # Labels for Prometheus Operator to select this ServiceMonitor
+  # Example: { release: "prometheus" }
+  labels: {}

@@ -132,9 +132,6 @@ The server will complete in-flight requests and shut down cleanly.
 * **Production-grade error handling** - one failing collector does not break `/metrics`
 * **Comprehensive test coverage** - including exporter tests with mocked collectors
 
-**Not yet available:**
-* Helm charts for Kubernetes deployment
-
 ---
 
 ## Running with Docker
@@ -205,3 +202,88 @@ Once running, verify the container is healthy:
 curl http://localhost:9000/healthcheck
 curl http://localhost:9000/metrics
 ```
+
+---
+
+## Kubernetes / Helm Deployment
+
+MyGoMetrics can be deployed to Kubernetes using the provided Helm chart.
+
+### Prerequisites
+
+- Kubernetes 1.19+
+- Helm 3.0+
+- Prometheus Operator (optional, for ServiceMonitor support)
+
+### Installation
+
+**Install from local chart:**
+
+```bash
+helm install mygometrics ./helm/mygometrics
+```
+
+**Install with custom values:**
+
+```bash
+helm install mygometrics ./helm/mygometrics \
+  --set image.repository=your-registry/mygometrics \
+  --set image.tag=0.6.0 \
+  --set config.env=production \
+  --set config.logLevel=info
+```
+
+**Install with values file:**
+
+```bash
+helm install mygometrics ./helm/mygometrics -f my-values.yaml
+```
+
+### Configuration
+
+All application configuration options are available via Helm values under `config.*`:
+
+- `config.listenAddr` → `LISTEN_ADDR` environment variable
+- `config.collectInterval` → `COLLECT_INTERVAL` environment variable
+- `config.host` → `HOST` environment variable (metrics label)
+- `config.env` → `ENV` environment variable (metrics label)
+- `config.enabledCollectors` → `ENABLED_COLLECTORS` environment variable
+- `config.logLevel` → `LOG_LEVEL` environment variable
+
+See `helm/mygometrics/values.yaml` for all available options and defaults. For detailed configuration semantics, see [CONFIGURATION.md](./CONFIGURATION.md).
+
+### ServiceMonitor (Prometheus Operator)
+
+To enable automatic Prometheus discovery, enable the ServiceMonitor:
+
+```bash
+helm install mygometrics ./helm/mygometrics \
+  --set serviceMonitor.enabled=true \
+  --set serviceMonitor.labels.release=prometheus
+```
+
+Or in `values.yaml`:
+
+```yaml
+serviceMonitor:
+  enabled: true
+  interval: "30s"
+  labels:
+    release: prometheus
+```
+
+**Note:** The `serviceMonitor.labels` must match your Prometheus instance's selector for automatic discovery.
+
+### Upgrading
+
+```bash
+helm upgrade mygometrics ./helm/mygometrics
+```
+
+### Uninstallation
+
+```bash
+helm uninstall mygometrics
+```
+
+For more details, see [Helm`s Readme.md](../helm/mygometrics/README.md).

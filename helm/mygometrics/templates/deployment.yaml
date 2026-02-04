@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mygometrics.fullname" . }}
+  labels:
+    {{- include "mygometrics.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mygometrics.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mygometrics.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "mygometrics.serviceAccountName" $ }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mygometrics
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+          env:
+            - name: LISTEN_ADDR
+              value: {{ .Values.config.listenAddr | quote }}
+            - name: COLLECT_INTERVAL
+              value: {{ .Values.config.collectInterval | quote }}
+            {{- if .Values.config.host }}
+            - name: HOST
+              value: {{ .Values.config.host | quote }}
+            {{- end }}
+            {{- if .Values.config.env }}
+            - name: ENV
+              value: {{ .Values.config.env | quote }}
+            {{- end }}
+            {{- if .Values.config.enabledCollectors }}
+            - name: ENABLED_COLLECTORS
+              value: {{ join "," .Values.config.enabledCollectors | quote }}
+            {{- end }}
+            - name: LOG_LEVEL
+              value: {{ .Values.config.logLevel | quote }}
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

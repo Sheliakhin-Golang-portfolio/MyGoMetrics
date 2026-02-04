@@ -276,6 +276,58 @@ The goal is not to present a "perfect" exporter, but to **make trade-offs explic
 
 ---
 
+## 13. Kubernetes Support Philosophy
+
+**Decision:** Provide Kubernetes deployment artifacts without introducing a hard dependency.
+
+**Rationale:**
+
+* Many exporters run outside Kubernetes
+* Helm charts are valuable but optional
+* Avoids Kubernetes-specific logic in the application code
+
+**Implications:**
+
+* Core binary remains platform-agnostic
+* Kubernetes support lives entirely in deployment manifests
+
+---
+
+## 14. CI/CD and Release Strategy
+
+**Decision:** Use automated CI for build, test, and release artifacts.
+
+**Rationale:**
+
+* Exporters are infrastructure components
+* Reproducible builds are critical
+* Versioned releases improve trust
+
+**Implications:**
+
+* Every tagged release is built and tested automatically
+* Multi-architecture support is provided by default
+
+---
+
+## 15. Scope Control & Deferred Features
+
+**Decision:** Explicitly defer advanced features.
+
+**Examples of Deferred Features:**
+
+* Container-level metrics
+* Kubernetes pod metrics
+* High-cardinality labeling
+* Dynamic configuration reload
+
+**Rationale:**
+
+* Prevents scope creep
+* Keeps the project small, understandable, and complete
+
+---
+
 ## Final Note
 
 These decisions reflect **intentional trade-offs**, not missing knowledge.

@@ -1,0 +1,12 @@
+apiVersion: v2
+name: mygometrics
+description: A host-level Prometheus exporter for system and Go runtime metrics
+type: application
+version: 0.6.0
+appVersion: "1.0.0"
+keywords:
+  - prometheus
+  - exporter
+  - metrics
+  - helm
+maintainers: []

@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0] - Stage 6: Helm Chart
+
+### Added
+
+#### Helm Chart for Kubernetes Deployment
+
+- `**helm/mygometrics/**`: Complete Helm chart for Kubernetes deployment
+  - `Chart.yaml`: Chart metadata (version 0.6.0, appVersion 1.0.0)
+  - `values.yaml`: Comprehensive configuration values for all app settings
+  - `templates/deployment.yaml`: Kubernetes Deployment with health probes, Pod Security Standards (restricted profile)
+  - `templates/service.yaml`: Kubernetes Service (ClusterIP by default)
+  - `templates/servicemonitor.yaml`: Optional Prometheus Operator ServiceMonitor (disabled by default)
+  - `templates/serviceaccount.yaml`: ServiceAccount creation (enabled by default)
+  - `templates/_helpers.tpl`: Helm template helpers for labels and naming
+  - `README.md`: Chart documentation with installation and configuration examples
+
+#### Configuration via Helm Values
+
+- All application configuration options available via Helm values:
+  - `config.listenAddr` → `LISTEN_ADDR` environment variable
+  - `config.collectInterval` → `COLLECT_INTERVAL` environment variable
+  - `config.host` → `HOST` environment variable (metrics label)
+  - `config.env` → `ENV` environment variable (metrics label)
+  - `config.enabledCollectors` → `ENABLED_COLLECTORS` environment variable
+  - `config.logLevel` → `LOG_LEVEL` environment variable
+- Image configuration: `image.repository`, `image.tag`, `image.pullPolicy`
+- Service configuration: `service.type`, `service.port`
+- Resource requests/limits support via `resources` values
+- ServiceAccount configuration via `serviceAccount` values
+
+#### ServiceMonitor Support
+
+- Optional Prometheus Operator integration:
+  - `serviceMonitor.enabled`: Enable/disable ServiceMonitor creation
+  - `serviceMonitor.interval`: Scrape interval configuration
+  - `serviceMonitor.namespace`: Override ServiceMonitor namespace
+  - `serviceMonitor.labels`: Labels for Prometheus Operator selector matching
+- Automatic Prometheus discovery when ServiceMonitor is enabled and labels match
+
+#### Documentation Updates
+
+- `**docs/RUNNING.md**`: Added Kubernetes / Helm deployment section
+  - Helm installation instructions (local chart, custom values, values file)
+  - Configuration via Helm values
+  - ServiceMonitor setup for Prometheus Operator
+  - Upgrade and uninstallation commands
+  - Reference to chart README and CONFIGURATION.md
+
+### Technical Details
+
+- Helm chart follows Kubernetes and Helm best practices:
+  - Standard Helm labels (`app.kubernetes.io/name`, `app.kubernetes.io/instance`, etc.)
+  - Template helpers for consistent naming and labeling
+  - Conditional resource creation (ServiceMonitor, ServiceAccount)
+  - Health probes (liveness and readiness) on `/healthcheck` endpoint
+  - Pod Security Standards compliance (restricted profile): non-root user (65534), read-only root filesystem, no privilege escalation, all capabilities dropped, seccomp enabled
+  - Resource requests/limits support for production deployments
+
+- Chart versioning:
+  - Chart version (0.6.0) increments with chart changes
+  - App version (1.0.0) is fixed and decoupled from chart version
+  - Chart version never decreases, even when syncing with app releases
+
+- Kubernetes deployment features:
+  - Single replica by default (configurable via `replicaCount`)
+  - ClusterIP service by default (configurable via `service.type`)
+  - Container port 9000 with named port `http`
+  - Environment variables mapped from Helm values
+  - Graceful shutdown support via Kubernetes signals
+
+---
+
 ## [0.5.0] - Stage 5: Docker & Containerization
 
 ### Added
