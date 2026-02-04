@@ -33,7 +33,7 @@ The service architecture follows a clear flow:
 
 The project is designed to demonstrate how real Go exporters are built and evolved, focusing on clean architecture, reliability, and operational visibility — the core concerns of production monitoring infrastructure.
 
-**Current Stage:** Stage 7 - CI/CD
+**Current Stage:** Stage 8 - Dashboards & Observability (Release)
 
 ---
 
@@ -56,6 +56,7 @@ Detailed architectural decisions are documented separately.
 
 All detailed documentation is moved to `docs/` folder:
 
+- [Architecture](docs/ARCHITECTURE.md)
 - [Architectural and design decisions](docs/DECISIONS.md)
 - [CI/CD & Releases](docs/CI_CD.md)
 - [Configuration & Environment Variables](docs/CONFIGURATION.md)

@@ -103,6 +103,15 @@ scrape_configs:
 
 Metrics are collected periodically (default: every 15 seconds) and updated in the Prometheus registry. The `/metrics` endpoint serves the current state of all metrics.
 
+## Observability (Prometheus, Alerts, Grafana)
+
+For a full observability stack—Prometheus scraping, alert rules, and a Grafana dashboard—the project provides:
+
+- **`prometheus/alerts.yml`** — Example Prometheus alert rules (exporter down, high CPU/memory, high goroutine count).
+- **`grafana/dashboard.json`** — A pre-built Grafana dashboard for MyGoMetrics metrics (CPU, memory, disk I/O, Go runtime).
+
+Import instructions, end-to-end flow (scrape → alerts → dashboard), and troubleshooting are described in [OBSERVABILITY.md](./OBSERVABILITY.md).
+
 ## Graceful Shutdown
 
 The server handles `SIGINT` (Ctrl+C) and `SIGTERM` signals gracefully:

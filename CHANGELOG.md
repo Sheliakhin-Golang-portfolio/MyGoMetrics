@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - Stage 8: Dashboards & Observability
+
+### Added
+
+#### Grafana Dashboard
+
+- **`grafana/dashboard.json`**: Pre-built Grafana dashboard for MyGoMetrics
+  - **Title**: "MyGoMetrics - Host & Runtime Overview"
+  - **UID**: `mygometrics-overview`
+  - **Panels**: CPU usage (time series), memory usage % (gauge), memory used/total (time series), disk I/O rates (time series), Go runtime goroutines, heap allocation, GC cycles rate
+  - **Variables**: `host` and `env` for filtering by metric labels (populated from Prometheus)
+  - **Data source**: Prometheus (generic datasource UID; user selects Prometheus at import)
+  - Uses only existing MyGoMetrics metrics; no dummy series
+
+#### Prometheus Alert Rules
+
+- **`prometheus/alerts.yml`**: Example Prometheus alerting rules (declarative config only; no application code changes)
+  - **MyGoMetricsExporterDown**: Exporter unreachable for 2+ minutes (`up{job="mygometrics"} == 0`)
+  - **MyGoMetricsHighCPU**: CPU usage > 90% for 5+ minutes
+  - **MyGoMetricsHighMemoryUsage**: Memory usage > 85% for 5+ minutes
+  - **MyGoMetricsHighGoroutineCount**: Goroutine count > 1000 for 5+ minutes
+  - Each rule includes `summary` and `description` annotations
+  - Loaded via Prometheus `rule_files`; mount file and reference path in `prometheus.yml`
+
+#### Observability Documentation
+
+- **`docs/OBSERVABILITY.md`**: End-to-end observability guide
+  - **Grafana import**: Steps to import `grafana/dashboard.json` (Upload JSON → Select Prometheus datasource → Import); link to Grafana docs
+  - **Prometheus scraping**: Scrape config for MyGoMetrics `/metrics`; verification via targets and `up` query
+  - **Alert rules**: How to load `prometheus/alerts.yml` via `rule_files`; Alertmanager integration note; rule customization and verification
+  - **End-to-end flow**: Scrape → alerts → dashboard (ASCII diagram and data flow description)
+  - **Troubleshooting**: Prometheus not scraping, Grafana "No Data", alerts not firing
+  - **Additional resources**: Links to Prometheus, Grafana, PromQL; cross-links to CONFIGURATION.md and RUNNING.md
+
+#### Architecture Documentation
+
+- **`docs/ARCHITECTURE.md`**: Architecture documentation for MyGoMetrics
+  - **High-level design**: Stateless Prometheus exporter; collector-based, Prometheus-agnostic design; technical constraints (Go, Prometheus client, Docker/Helm, HTTP, zap)
+  - **System context**: Mermaid diagram (host system and Go runtime → MyGoMetrics → Prometheus)
+  - **Container architecture**: Mermaid diagram for MyGoMetrics, Prometheus, and optional Grafana
+  - **Service internal structure**: Directory tree (`cmd/`, `internal/config`, `collector`, `exporter`, `logger`, `server`, plus `grafana/`, `helm/`, `prometheus/`, `docs/`)
+  - **Data flow & interaction patterns**: Periodic collection at `CollectInterval`, collector → snapshot → registry, on-demand exposition via `/metrics`, graceful shutdown; example flows for scrape, collection cycle, and health check
+  - **Deployment & infrastructure**: Docker and Kubernetes/Helm; scaling and config pointers to CONFIGURATION.md and RUNNING.md
+  - **Quality attributes**: Performance, reliability, observability (metric names, endpoints, logging)
+  - **Technology stack**: Go 1.25+, prometheus/client_golang, gopsutil, runtime/metrics, zap, godotenv
+  - **Architecture decision records**: Summary with references to DECISIONS.md (scope, collectors, Prometheus-agnostic design, metrics sources, config, shutdown)
+  - Cross-links to CONFIGURATION.md, RUNNING.md, DECISIONS.md; README.md updated with link to ARCHITECTURE.md
+
+#### Documentation Updates
+
+- **`docs/RUNNING.md`**: Observability section added
+  - New section "Observability (Prometheus, Alerts, Grafana)" after Metrics Endpoint
+  - Lists `prometheus/alerts.yml` and `grafana/dashboard.json`; points to OBSERVABILITY.md for import instructions and end-to-end story
+
+#### Helm Chart Version
+
+- **`helm/mygometrics/Chart.yaml`**: Chart version set to 1.0.0
+  - Aligns with Stage 8 / v1.0.0 release
+  - `appVersion` remains 1.0.0 (unchanged)
+
+### Technical Details
+
+- **No application code changes**: Stage 8 adds only declarative assets (dashboard JSON, alert rules YAML) and documentation
+- **Metric inventory**: Dashboard and alerts use existing metrics from `internal/exporter/prometheus.go` (`mygometrics_*` with `host`/`env` labels)
+- **Prometheus integration**: Alert rules assume job name `mygometrics`; users with different scrape job names must adjust rules
+- **Grafana**: Dashboard variables and panels use PromQL; datasource selected at import time
+
+### Notes
+
+- Dashboard and alert rules are examples; thresholds and durations can be customized in `prometheus/alerts.yml` and dashboard settings
+- Single OBSERVABILITY.md keeps Grafana import and end-to-end observability story in one place
+- Helm chart 1.0.0 marks the first release with full observability stack documentation and assets
+
+---
+
 ## [0.7.0] - Stage 7: CI/CD
 
 ### Added

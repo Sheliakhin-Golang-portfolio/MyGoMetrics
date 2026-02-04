@@ -1,0 +1,39 @@
+groups:
+  - name: mygometrics
+    interval: 30s
+    rules:
+      - alert: MyGoMetricsExporterDown
+        expr: up{job=~"mygometrics.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MyGoMetrics exporter is down"
+          description: "MyGoMetrics exporter on {{ $labels.instance }} has been down for more than 2 minutes."
+
+      - alert: MyGoMetricsHighCPU
+        expr: mygometrics_cpu_usage_percent > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage on {{ $labels.host }} ({{ $labels.env }}) is above 90% for more than 5 minutes (current: {{ $value }}%)."
+
+      - alert: MyGoMetricsHighMemoryUsage
+        expr: (mygometrics_memory_used_bytes / mygometrics_memory_total_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage on {{ $labels.host }} ({{ $labels.env }}) is above 85% for more than 5 minutes (current: {{ $value | humanize }}%)."
+
+      - alert: MyGoMetricsHighGoroutineCount
+        expr: mygometrics_runtime_goroutines > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High goroutine count detected"
+          description: "Goroutine count on {{ $labels.host }} ({{ $labels.env }}) is above 1000 for more than 5 minutes (current: {{ $value }})."
