@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - master
+    tags:
+      - 'v*'
     paths:
       - '.github/**'
       - 'cmd/**'
@@ -25,8 +27,6 @@ on:
       - 'go.sum'
       - 'Dockerfile'
       - '.dockerignore'
-  tags:
-    - 'v*'
 
 env:
   REGISTRY: ghcr.io
