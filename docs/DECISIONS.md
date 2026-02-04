@@ -303,10 +303,18 @@ The goal is not to present a "perfect" exporter, but to **make trade-offs explic
 * Reproducible builds are critical
 * Versioned releases improve trust
 
+**Implementation:**
+
+* GitHub Actions workflow (`.github/workflows/ci.yml`) runs `go test` and `go vet` on every push/PR
+* Docker images are built and validated on every run
+* On version tags (e.g., `v0.7.0`), images are automatically built and pushed to GitHub Container Registry (ghcr.io)
+* Single-architecture builds (`linux/amd64`) are implemented; multi-arch support can be added incrementally
+
 **Implications:**
 
 * Every tagged release is built and tested automatically
-* Multi-architecture support is provided by default
+* Container images are published to `ghcr.io/<owner>/mygometrics:<tag>`
+* Multi-architecture support can be added without changing the Dockerfile (via buildx in CI)
 
 ---
 

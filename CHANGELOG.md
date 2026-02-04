@@ -7,6 +7,117 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0] - Stage 7: CI/CD
+
+### Added
+
+#### GitHub Actions CI/CD Workflow
+
+- `**.github/workflows/ci.yml**`: Complete CI/CD pipeline for automated testing and releases
+  - **Lint and Test Job**: Runs on every push/PR
+    - `go vet ./...` for static code analysis
+    - `go test ./...` for unit tests
+    - Validates code quality on all relevant changes
+  - **Docker Build Job**: Validates Docker image builds on all runs
+    - Uses Docker Buildx for consistent builds
+    - Context at repository root with `./Dockerfile`
+    - Does not push on non-tag builds (validation only)
+  - **Docker Push on Tag**: Automatic image publishing for releases
+    - Triggered only on version tags (e.g., `v0.7.0`, `v*` pattern)
+    - Builds and pushes to GitHub Container Registry (ghcr.io)
+    - Uses `GITHUB_TOKEN` for authentication (no extra secrets required)
+    - Single-architecture build (`linux/amd64`) with multi-arch support planned
+    - Image naming: `ghcr.io/sheliakhin-golang-portfolio/mygometrics:<tag>`
+  - **Path Filtering**: Workflow triggers only on relevant changes
+    - Monitored paths: `.github/`, `cmd/`, `internal/`, `go.mod`, `Dockerfile`, `helm/`
+    - Reduces unnecessary pipeline runs
+
+#### Helm Chart Updates for Container Registry
+
+- `**helm/mygometrics/Chart.yaml**`: Updated to version 0.7.0
+  - Chart version incremented from 0.6.0 to 0.7.0
+  - Reflects CI/CD integration and registry changes
+
+- `**helm/mygometrics/values.yaml**`: Container registry configuration
+  - `image.registry`: New field set to `ghcr.io` (GitHub Container Registry)
+  - `image.repository`: Updated to `sheliakhin-golang-portfolio/mygometrics` (lowercase for compatibility)
+  - `image.tag`: Defaults to `v0.7.0` for this release
+  - Fully qualified image reference: `ghcr.io/sheliakhin-golang-portfolio/mygometrics:v0.7.0`
+
+- `**helm/mygometrics/templates/deployment.yaml**`: Registry-aware image reference
+  - Updated container image template to use both `image.registry` and `image.repository`
+  - Previous format: `{{ .Values.image.repository }}:{{ .Values.image.tag }}`
+  - New format: `{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}`
+  - Supports full registry paths for container images
+
+#### Documentation Updates
+
+- `**docs/RUNNING.md**`: Added CI/CD and release section
+  - How to cut a release using version tags
+  - Image publishing location (ghcr.io)
+  - Automated build and test process description
+  - Tag format requirements (`v*` pattern)
+
+- `**docs/DECISIONS.md**`: Section 14 (CI/CD and Release Strategy)
+  - Rationale for automated CI/CD (reproducible builds, infrastructure component needs)
+  - GitHub Actions implementation details
+  - Container registry choice (ghcr.io)
+  - Single-arch vs multi-arch build strategy
+  - Implications for release process and versioning
+
+### Technical Details
+
+#### CI/CD Pipeline Architecture
+
+- **Trigger Strategy**:
+  - Push/PR: Runs linting, testing, and Docker build validation (no push)
+  - Tag push (`v*`): Runs full pipeline including Docker push to registry
+- **Go Version**: Automatically detected from `go.mod` (currently Go 1.25)
+- **Working Directory**: Repository root (MyGoMetrics); all commands run from repo root
+- **Docker Build Context**: Repository root (`.`), using `./Dockerfile`
+
+#### Container Image Publishing
+
+- **Registry**: GitHub Container Registry (ghcr.io)
+  - No additional secrets required (uses `GITHUB_TOKEN`)
+  - Public or private based on repository visibility
+- **Image Naming Convention**: Lowercase for compatibility with registry requirements
+  - Format: `ghcr.io/<owner>/<repository>:<tag>`
+  - Example: `ghcr.io/sheliakhin-golang-portfolio/mygometrics:v0.7.0`
+- **Tagging Strategy**:
+  - Git tag becomes Docker image tag (e.g., `v0.7.0` → `:v0.7.0`)
+  - Latest tag can be added for default branch tags (optional)
+
+#### Multi-Architecture Support (Planned)
+
+- Current implementation: Single-architecture (`linux/amd64`)
+- Future enhancement: Multi-arch builds via Docker Buildx
+  - Target platforms: `linux/amd64`, `linux/arm64`
+  - Buildx driver: `docker-container` for multi-platform support
+  - Push as manifest list for automatic platform selection
+- **Feasibility**: Go 1.25 with `CGO_ENABLED=0` supports cross-compilation
+- Current Dockerfile hardcodes `GOARCH=amd64`; multi-arch can be handled in CI without Dockerfile changes
+
+#### Helm Chart Registry Integration
+
+- Chart version and app version are decoupled
+- Chart version increments with chart changes (0.7.0)
+- Image registry/repository separation enables flexibility
+- Deployment template constructs full image path from values
+- Backward compatibility maintained via structured values
+
+### Notes
+
+- CI/CD workflow is triggered only on relevant path changes to optimize build times
+- Docker images are validated on every build; published only on version tags
+- GitHub Container Registry authentication uses built-in `GITHUB_TOKEN` (no manual secret setup)
+- Single-architecture builds provide fast, reliable releases; multi-arch can be added incrementally
+- Helm chart now supports any OCI-compatible registry via `image.registry` field
+- Release process: tag commit with `v*` pattern, push tag, CI automatically builds and publishes
+- All releases are reproducible via Git tags and automated builds
+
+---
+
 ## [0.6.0] - Stage 6: Helm Chart
 
 ### Added

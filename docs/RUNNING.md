@@ -112,26 +112,6 @@ The server handles `SIGINT` (Ctrl+C) and `SIGTERM` signals gracefully:
 
 The server will complete in-flight requests and shut down cleanly.
 
-## Current Stage Features
-
-**Stage 5 (v0.5.0)** provides:
-* All Stage 4 features plus:
-* **Docker containerization support** - Multi-stage Dockerfile with distroless runtime
-* **Production-ready container image** - Non-root execution, minimal base image
-
-**Stage 4 (v0.4.0)** provides:
-* HTTP server with `/healthcheck` endpoint
-* `/metrics` endpoint for Prometheus scraping
-* Full configuration via flags, environment variables, and `.env` files
-* Metrics collection configuration (interval, host, env labels)
-* **Collector enable/disable by name** - selectively enable collectors
-* **Structured logging with uber-go/zap** - JSON logs with configurable levels
-* Graceful shutdown handling
-* Core metrics collection (CPU, memory, disk, runtime) via collector package
-* Prometheus exporter with periodic collection and metric exposition
-* **Production-grade error handling** - one failing collector does not break `/metrics`
-* **Comprehensive test coverage** - including exporter tests with mocked collectors
-
 ---
 
 ## Running with Docker

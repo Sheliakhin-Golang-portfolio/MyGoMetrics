@@ -33,7 +33,7 @@ The service architecture follows a clear flow:
 
 The project is designed to demonstrate how real Go exporters are built and evolved, focusing on clean architecture, reliability, and operational visibility — the core concerns of production monitoring infrastructure.
 
-**Current Stage:** Stage 6 - Helm Chart
+**Current Stage:** Stage 7 - CI/CD
 
 ---
 
@@ -57,6 +57,7 @@ Detailed architectural decisions are documented separately.
 All detailed documentation is moved to `docs/` folder:
 
 - [Architectural and design decisions](docs/DECISIONS.md)
+- [CI/CD & Releases](docs/CI_CD.md)
 - [Configuration & Environment Variables](docs/CONFIGURATION.md)
 - [Helm details](helm/mygometrics/README.md)
 - [Running Locally](docs/RUNNING.md)

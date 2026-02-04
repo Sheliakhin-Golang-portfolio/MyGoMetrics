@@ -5,10 +5,12 @@
 replicaCount: 1
 
 image:
+  # Container registry (e.g., ghcr.io, docker.io)
+  registry: ghcr.io
   # Image repository (without tag)
-  repository: mygometrics
+  repository: sheliakhin-golang-portfolio/mygometrics
   # Image tag (override with specific version or 'latest')
-  tag: "v0.6.0"
+  tag: "v0.7.0"
   # Image pull policy
   pullPolicy: IfNotPresent
 
