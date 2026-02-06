@@ -17,6 +17,7 @@ It demonstrates:
 - Graceful shutdown and lifecycle management
 - Configuration via flags and environment variables
 - Production-oriented error handling and observability
+- CI/CD cycle implementation
 
 ---
 
